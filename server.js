@@ -9,6 +9,14 @@ app.use(express.json());
 
 const ROBLO_COOKIE = process.env.ROBLO_COOKIE; // ton cookie Roblox sécurisé
 
+app.use("/api/privateservers", (req, res, next) => {
+  if (req.headers["x-api-key"] !== process.env.API_KEY) {
+    return res.status(401).json({ error: "Non autorisé" });
+  }
+  next();
+});
+
+
 // Endpoint pour récupérer les serveurs privés
 app.get("/api/privateservers/:username", async (req, res) => {
   const robloxUsername = req.params.username;
@@ -30,7 +38,17 @@ app.get("/api/privateservers/:username", async (req, res) => {
       { headers: { Cookie: `.ROBLOSECURITY=${ROBLO_COOKIE}` } }
     );
 
-    res.json({ userId, servers: serversRes.data });
+    res.json({
+  userId,
+  servers: serversRes.data.data.map(server => ({
+    id: server.id,
+    name: server.name,
+    status: server.status,
+    maxPlayers: server.maxPlayers,
+    playing: server.playing
+  }))
+});
+
 
   } catch (err) {
     console.error(err.response?.data || err);
