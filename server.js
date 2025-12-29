@@ -1,38 +1,29 @@
 const { chromium } = require("playwright");
 const express = require("express");
 const cors = require("cors");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// URL WebSocket Browserless
+const REMOTE_BROWSER_WS = process.env.REMOTE_BROWSER_WS;
+
 app.get("/api/cookie", async (req, res) => {
-  const { url, username, password } = req.query;
+  const { url } = req.query;
   if (!url) return res.status(400).json({ error: "Missing URL parameter" });
 
   let browser;
   try {
-    browser = await chromium.launch({ headless: false });
+    browser = await chromium.connectOverCDP(REMOTE_BROWSER_WS);
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    if (username && password) {
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
-      await page.fill('input[name="username"]', username);
-      await page.fill('input[name="password"]', password);
-      await Promise.all([
-        page.click('button[type="submit"]'),
-        page.waitForNavigation({ waitUntil: "networkidle" })
-      ]);
-    } else {
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
-    }
+    await page.goto(url, { waitUntil: "networkidle" });
 
-    await page.waitForTimeout(2000); // attendre que tous les cookies soient posés
-    const allCookies = await context.cookies();
-    const httpOnly = allCookies.filter(c => c.httpOnly);
-    const notHttpOnly = allCookies.filter(c => !c.httpOnly);
+    const cookies = await context.cookies();
+    res.json({ cookies });
 
-    res.json({ httpOnly, notHttpOnly });
     await context.close();
   } catch (err) {
     console.error(err);
