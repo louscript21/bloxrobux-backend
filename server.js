@@ -1,61 +1,52 @@
-import express from "express";
-import axios from "axios";
-import dotenv from "dotenv";
+const { chromium } = require("playwright");
 
-dotenv.config();
+(async () => {
+  console.log("🚀 Lancement du navigateur...");
 
-const app = express();
-app.use(express.json());
+  const browser = await chromium.launch({
+    headless: true, // mets false pour voir le navigateur
+    slowMo: 50
+  });
 
-const ROBLO_COOKIE = process.env.ROBLO_COOKIE; // ton cookie Roblox sécurisé
+  // Contexte = session navigateur (cookies, localStorage, etc.)
+  const context = await browser.newContext();
 
-app.use("/api/privateservers", (req, res, next) => {
-  if (req.headers["x-api-key"] !== process.env.API_KEY) {
-    return res.status(401).json({ error: "Non autorisé" });
-  }
-  next();
-});
+  const page = await context.newPage();
 
+  console.log("🌍 Ouverture de Wikipédia...");
+  await page.goto("https://fr.wikipedia.org", {
+    waitUntil: "networkidle"
+  });
 
-// Endpoint pour récupérer les serveurs privés
-app.get("/api/privateservers/:username", async (req, res) => {
-  const robloxUsername = req.params.username;
-
+  // Tentative d'acceptation des cookies (si le bouton existe)
   try {
-    // 1️⃣ Récupérer l'ID Roblox
-    const userRes = await axios.post(
-      "https://users.roblox.com/v1/usernames/users",
-      { usernames: [robloxUsername], excludeBannedUsers: true },
-      { headers: { "Content-Type": "application/json" } }
-    );
-
-    const userId = userRes.data.data[0]?.id;
-    if (!userId) return res.status(404).json({ error: "Utilisateur Roblox introuvable" });
-
-    // 2️⃣ Récupérer les serveurs privés du compte lié au cookie
-    const serversRes = await axios.get(
-      "https://games.roblox.com/v1/private-servers/my-private-servers",
-      { headers: { Cookie: `.ROBLOSECURITY=${ROBLO_COOKIE}` } }
-    );
-
-    res.json({
-  userId,
-  servers: serversRes.data.data.map(server => ({
-    id: server.id,
-    name: server.name,
-    status: server.status,
-    maxPlayers: server.maxPlayers,
-    playing: server.playing
-  }))
-});
-
-
-  } catch (err) {
-    console.error(err.response?.data || err);
-    res.status(500).json({ error: "Erreur récupération serveurs privés" });
+    await page.click('button:has-text("Tout accepter")', { timeout: 3000 });
+    console.log("✅ Cookies acceptés");
+  } catch {
+    console.log("ℹ️ Pas de bannière cookies détectée");
   }
-});
 
-// Démarrage du serveur
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Backend lancé sur le port ${PORT}`));
+  // Récupération des cookies
+  const cookies = await context.cookies();
+
+  console.log("\n🍪 Cookies récupérés :\n");
+  cookies.forEach(cookie => {
+    console.log(
+      `Nom: ${cookie.name}\n` +
+      `Valeur: ${cookie.value}\n` +
+      `Domaine: ${cookie.domain}\n` +
+      `Path: ${cookie.path}\n` +
+      `Secure: ${cookie.secure}\n` +
+      `HttpOnly: ${cookie.httpOnly}\n` +
+      "-----------------------------"
+    );
+  });
+
+  // Sauvegarde des cookies pour réutilisation
+  await context.storageState({ path: "cookies.json" });
+  console.log("\n💾 Cookies sauvegardés dans cookies.json");
+
+  await browser.close();
+  console.log("🛑 Navigateur fermé");
+})();
+
