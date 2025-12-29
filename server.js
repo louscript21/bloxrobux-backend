@@ -1,42 +1,33 @@
 const { chromium } = require("playwright");
 const express = require("express");
 const cors = require("cors");
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// URL du navigateur distant Browserless / Playwright Cloud
-const REMOTE_BROWSER_WS = process.env.REMOTE_BROWSER_WS;
-
 app.get("/api/cookie", async (req, res) => {
   const { url, username, password } = req.query;
-  if (!url) return res.status(400).json({ error: "Missing URL parameter" });
+  if (!url || !username || !password)
+    return res.status(400).json({ error: "Missing parameters" });
 
   let browser;
   try {
-    // Se connecter au navigateur distant
-    browser = await chromium.connectOverCDP(REMOTE_BROWSER_WS);
-
+    browser = await chromium.launch({ headless: false }); // headless: false pour voir ce qu'il se passe
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // Login si credentials fournis
-    if (username && password) {
-      await page.goto(url);
+    // Aller sur la page de login
+    await page.goto(url);
 
-      // Adapter selon le formulaire du site
-      await page.fill('input[name="username"]', username);
-      await page.fill('input[name="password"]', password);
-      await Promise.all([
-        page.click('button[type="submit"]'),
-        page.waitForNavigation({ waitUntil: "networkidle" })
-      ]);
-    } else {
-      await page.goto(url, { waitUntil: "networkidle" });
-    }
+    // Remplir le formulaire (adapter les sélecteurs au site réel)
+    await page.fill('input[name="username"]', username);
+    await page.fill('input[name="password"]', password);
+    await Promise.all([
+      page.click('button[type="submit"]'),
+      page.waitForNavigation({ waitUntil: "networkidle" })
+    ]);
 
-    // Récupérer tous les cookies (HTTPOnly inclus)
+    // Récupérer tous les cookies après login
     const cookies = await context.cookies();
 
     res.json({ cookies });
