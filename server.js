@@ -1,36 +1,55 @@
 const { chromium } = require("playwright");
 const express = require("express");
 const cors = require("cors");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.get("/api/cookie", async (req, res) => {
   const { url, username, password } = req.query;
-  if (!url || !username || !password)
-    return res.status(400).json({ error: "Missing parameters" });
+
+  if (!url) return res.status(400).json({ error: "Missing URL parameter" });
 
   let browser;
+
   try {
-    browser = await chromium.launch({ headless: false }); // headless: false pour voir ce qu'il se passe
+    // Lancer Chromium en headless (Render n'a pas de GUI)
+    browser = await chromium.launch({ headless: true });
     const context = await browser.newContext();
+
+    // Pour intercepter les cookies HTTP-only depuis les headers
+    const httpOnlyCookies = [];
+    context.on("page", page => {
+      page.on("response", response => {
+        const setCookie = response.headers()["set-cookie"];
+        if (setCookie) {
+          httpOnlyCookies.push(setCookie);
+        }
+      });
+    });
+
     const page = await context.newPage();
 
-    // Aller sur la page de login
-    await page.goto(url);
+    if (username && password) {
+      await page.goto(url, { waitUntil: "networkidle" });
 
-    // Remplir le formulaire (adapter les sélecteurs au site réel)
-    await page.fill('input[name="username"]', username);
-    await page.fill('input[name="password"]', password);
-    await Promise.all([
-      page.click('button[type="submit"]'),
-      page.waitForNavigation({ waitUntil: "networkidle" })
-    ]);
+      // Adaptable selon le formulaire du site
+      await page.fill('input[name="username"]', username);
+      await page.fill('input[name="password"]', password);
 
-    // Récupérer tous les cookies après login
+      await Promise.all([
+        page.click('button[type="submit"]'),
+        page.waitForNavigation({ waitUntil: "networkidle" })
+      ]);
+    } else {
+      await page.goto(url, { waitUntil: "networkidle" });
+    }
+
+    // Récupérer tous les cookies accessibles depuis JS
     const cookies = await context.cookies();
 
-    res.json({ cookies });
+    res.json({ cookies, httpOnlyCookies });
 
     await context.close();
   } catch (err) {
