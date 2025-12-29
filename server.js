@@ -11,29 +11,28 @@ app.get("/api/cookie", async (req, res) => {
 
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({ headless: false });
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    // Aller sur la page de login si username/password fournis
     if (username && password) {
-      await page.goto(url);
-
-      // À adapter selon le formulaire du site
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
       await page.fill('input[name="username"]', username);
       await page.fill('input[name="password"]', password);
-      await page.click('button[type="submit"]');
-
-      // Attendre que la navigation après login soit terminée
-      await page.waitForNavigation();
+      await Promise.all([
+        page.click('button[type="submit"]'),
+        page.waitForNavigation({ waitUntil: "networkidle" })
+      ]);
     } else {
-      await page.goto(url);
+      await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
     }
 
-    // Récupérer tous les cookies
-    const cookies = await context.cookies();
+    await page.waitForTimeout(2000); // attendre que tous les cookies soient posés
+    const allCookies = await context.cookies();
+    const httpOnly = allCookies.filter(c => c.httpOnly);
+    const notHttpOnly = allCookies.filter(c => !c.httpOnly);
 
-    res.json({ cookies });
+    res.json({ httpOnly, notHttpOnly });
     await context.close();
   } catch (err) {
     console.error(err);
@@ -44,6 +43,4 @@ app.get("/api/cookie", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Serveur en ligne sur le port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Serveur en ligne sur le port ${PORT}`));
