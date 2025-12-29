@@ -1,52 +1,43 @@
 const { chromium } = require("playwright");
+const express = require("express");
+const cors = require("cors");
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-(async () => {
-  console.log("🚀 Lancement du navigateur...");
+// URL du navigateur remote (par exemple Browserless ou Playwright Cloud)
+const REMOTE_BROWSER_WS = process.env.REMOTE_BROWSER_WS;
 
-  const browser = await chromium.launch({
-    headless: true, // mets false pour voir le navigateur
-    slowMo: 50
-  });
+app.get("/api/cookie", async (req, res) => {
+  const url = req.query.url;
+  if (!url) return res.status(400).json({ error: "Missing URL parameter" });
 
-  // Contexte = session navigateur (cookies, localStorage, etc.)
-  const context = await browser.newContext();
-
-  const page = await context.newPage();
-
-  console.log("🌍 Ouverture de Wikipédia...");
-  await page.goto("https://fr.wikipedia.org", {
-    waitUntil: "networkidle"
-  });
-
-  // Tentative d'acceptation des cookies (si le bouton existe)
+  let browser;
   try {
-    await page.click('button:has-text("Tout accepter")', { timeout: 3000 });
-    console.log("✅ Cookies acceptés");
-  } catch {
-    console.log("ℹ️ Pas de bannière cookies détectée");
+    // Se connecter au navigateur distant
+    browser = await chromium.connectOverCDP(REMOTE_BROWSER_WS);
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    // Aller sur le site
+    await page.goto(url);
+
+    // Récupérer tous les cookies
+    const cookies = await context.cookies();
+
+    res.json({ cookies });
+    await context.close();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to get cookies" });
+  } finally {
+    if (browser) await browser.close();
   }
+});
 
-  // Récupération des cookies
-  const cookies = await context.cookies();
-
-  console.log("\n🍪 Cookies récupérés :\n");
-  cookies.forEach(cookie => {
-    console.log(
-      `Nom: ${cookie.name}\n` +
-      `Valeur: ${cookie.value}\n` +
-      `Domaine: ${cookie.domain}\n` +
-      `Path: ${cookie.path}\n` +
-      `Secure: ${cookie.secure}\n` +
-      `HttpOnly: ${cookie.httpOnly}\n` +
-      "-----------------------------"
-    );
-  });
-
-  // Sauvegarde des cookies pour réutilisation
-  await context.storageState({ path: "cookies.json" });
-  console.log("\n💾 Cookies sauvegardés dans cookies.json");
-
-  await browser.close();
-  console.log("🛑 Navigateur fermé");
-})();
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Serveur en ligne sur le port ${PORT}`);
+});
 
