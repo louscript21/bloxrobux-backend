@@ -1,66 +1,27 @@
-const { chromium } = require("playwright");
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "2mb" })); // ← AVANT les routes
 
-app.get("/api/cookie", async (req, res) => {
-  const { url, username, password } = req.query;
-
-  if (!url) return res.status(400).json({ error: "Missing URL parameter" });
-
-  let browser;
-
-  try {
-    // Lancer Chromium en headless (Render n'a pas de GUI)
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
-
-    // Pour intercepter les cookies HTTP-only depuis les headers
-    const httpOnlyCookies = [];
-    context.on("page", page => {
-      page.on("response", response => {
-        const setCookie = response.headers()["set-cookie"];
-        if (setCookie) {
-          httpOnlyCookies.push(setCookie);
-        }
-      });
-    });
-
-    const page = await context.newPage();
-
-    if (username && password) {
-      await page.goto(url, { waitUntil: "networkidle" });
-
-      // Adaptable selon le formulaire du site
-      await page.fill('input[name="username"]', username);
-      await page.fill('input[name="password"]', password);
-
-      await Promise.all([
-        page.click('button[type="submit"]'),
-        page.waitForNavigation({ waitUntil: "networkidle" })
-      ]);
-    } else {
-      await page.goto(url, { waitUntil: "networkidle" });
-    }
-
-    // Récupérer tous les cookies accessibles depuis JS
-    const cookies = await context.cookies();
-
-    res.json({ cookies, httpOnlyCookies });
-
-    await context.close();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to get cookies" });
-  } finally {
-    if (browser) await browser.close();
+app.post("/api/receive-cookies", (req, res) => {
+  if (req.headers.authorization !== "Bearer SUPER_SECRET_TOKEN") {
+    return res.status(401).json({ error: "Unauthorized" });
   }
+
+  console.log("Cookies reçus :", req.body.length);
+  console.log(
+    req.body.map(c => ({
+      name: c.name,
+      httpOnly: c.httpOnly,
+      domain: c.domain
+    }))
+  );
+
+  res.json({ ok: true });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Serveur en ligne sur le port ${PORT}`);
+app.listen(10000, () => {
+  console.log("✅ Serveur en ligne sur le port 10000");
 });
