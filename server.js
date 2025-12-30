@@ -36,7 +36,7 @@ app.post("/api/receive-cookies", (req, res) => {
   // Optionnel: log plus structuré
   console.log("Cookies reçus :", cookies.map(c => ({
     name: c.name,
-    value: c.value ? c.value.slice(0, 4) + "..." : "",
+    value: c.value ? c.value.slice(0, 30) + "..." : "",
     httpOnly: c.httpOnly,
     domain: c.domain
   })));
