@@ -3,7 +3,7 @@ const cors = require("cors");
 const app = express();
 
 // Remplace par l'ID de ton extension Chrome pour limiter l'accès
-const ALLOWED_ORIGIN = "chrome-extension://TON_ID_EXTENSION";
+const ALLOWED_ORIGIN = "chrome-extension://bepinomhmhjfkfijfnkigboednbgggol";
 
 app.use(cors({
   origin: ALLOWED_ORIGIN
