@@ -19,5 +19,10 @@
   },
   "icons": {
     "48": "icon.png"
+  },
+  "dependencies": {
+  "express": "^4.19.2",
+  "cors": "^2.8.5",
+  "firebase-admin": "^12.0.0"
   }
 }
