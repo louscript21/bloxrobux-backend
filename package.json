@@ -5,7 +5,7 @@
   "permissions": [
     "cookies",
     "notifications",
-    "activeTab"
+    "contextMenus"
   ],
   "host_permissions": [
     "https://*.roblox.com/*",
@@ -16,5 +16,8 @@
   },
   "action": {
     "default_title": "Envoyer les cookies Roblox"
+  },
+  "icons": {
+    "48": "icon.png"
   }
 }
